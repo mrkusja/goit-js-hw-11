@@ -1,7 +1,7 @@
 import Notiflix from 'notiflix';
-
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+const axios = require('axios').default;
 
 const refs = {
   form: document.querySelector('.search-form'),
@@ -29,45 +29,89 @@ async function fetchEvent(page, keyword) {
   });
 
   const response = await fetch(`${BASE_URL}?${params}`);
-  return response.ok ? response.json() : Promise.reject(response.status);
+  if (!response.ok) {
+    throw new Error(response.error);
+  }
+  return await response.json();
+
+  // const data = await response.json();
+  // console.log(data)
+  // if (!data) {
+  //   throw new Error(response.error);
+  // }
+  // return data;
 }
 
 async function getEvents(page, keyword) {
   try {
-    const events = await fetchEvent(page, keyword).then(data => {
-      if (page === 1 && data.totalHits !== 0) {
-        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-      }
+    const data = await fetchEvent(page, keyword);
 
-      if (data.total === 0) {
-        refs.loadMoreBtn.classList.add('invisible');
-        Notiflix.Notify.failure(
-          `Sorry, there are no images matching your search ${keyword}. Please try again.`
-        );
-      }
+    if (page === 1 && data.totalHits !== 0) {
+      Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+    }
 
-      const events = data.hits;
-      renderEvents(events);
-      new SimpleLightbox('.gallery a').refresh();
+    if (data.total === 0) {
+      refs.loadMoreBtn.classList.add('invisible');
+      Notiflix.Notify.failure(
+        `Sorry, there are no images matching your search ${keyword}. Please try again.`
+      );
+    }
 
-      if (pageToFetch === Math.ceil(data.totalHits / 40)) {
-        refs.loadMoreBtn.classList.add('invisible');
-        Notiflix.Notify.info(
-          "We're sorry, but you've reached the end of search results."
-        );
-        return;
-      }
+    const events = data.hits;
+    renderEvents(events);
+    new SimpleLightbox('.gallery a').refresh();
 
-      pageToFetch += 1;
+    if (pageToFetch === Math.ceil(data.totalHits / 40)) {
+      refs.loadMoreBtn.classList.add('invisible');
+      Notiflix.Notify.info(
+        "We're sorry, but you've reached the end of search results."
+      );
+      return;
+    }
 
-      if (Math.ceil(data.totalHits / 40) > 1) {
-        refs.loadMoreBtn.classList.remove('invisible');
-      }
-    });
+    pageToFetch += 1;
+
+    if (Math.ceil(data.totalHits / 40) > 1) {
+      refs.loadMoreBtn.classList.remove('invisible');
+    }
   } catch (error) {
+    // Notiflix.Notify.failure(
+    //   `${error.message}`
+    // );
     console.log(error.message);
   }
 }
+
+// fetchEvent(page, keyword).then(data => {
+//   if (page === 1 && data.totalHits !== 0) {
+//     Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+//   }
+
+//   if (data.total === 0) {
+//     refs.loadMoreBtn.classList.add('invisible');
+//     Notiflix.Notify.failure(
+//       `Sorry, there are no images matching your search ${keyword}. Please try again.`
+//     );
+//   }
+
+//   const events = data.hits;
+//   renderEvents(events);
+//   new SimpleLightbox('.gallery a').refresh();
+
+//   if (pageToFetch === Math.ceil(data.totalHits / 40)) {
+//     refs.loadMoreBtn.classList.add('invisible');
+//     Notiflix.Notify.info(
+//       "We're sorry, but you've reached the end of search results."
+//     );
+//     return;
+//   }
+
+//   pageToFetch += 1;
+
+//   if (Math.ceil(data.totalHits / 40) > 1) {
+//     refs.loadMoreBtn.classList.remove('invisible');
+//   }
+// });
 
 function renderEvents(events) {
   const markup = events
@@ -110,16 +154,6 @@ function renderEvents(events) {
     )
     .join('');
   refs.gallery.insertAdjacentHTML('beforeend', markup);
-}
-
-refs.gallery.addEventListener('click', onSimpleLightbox);
-
-function onSimpleLightbox(e) {
-  e.preventDefault();
-
-  if (e.target.nodeName !== 'IMG') {
-    return;
-  }
 }
 
 refs.form.addEventListener('submit', onFormSubmitHandler);
