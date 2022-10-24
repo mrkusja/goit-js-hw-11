@@ -18,21 +18,46 @@ let keyword = '';
 let pageToFetch = 1;
 
 async function fetchEvent(page, keyword) {
-  const params = new URLSearchParams({
-    key: API,
-    q: keyword,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: true,
-    per_page: 40,
-    page,
-  });
 
-  const response = await fetch(`${BASE_URL}?${params}`);
-  if (!response.ok) {
+  // ----------axios----------------
+
+  const response = await axios.get(`${BASE_URL}`, {
+    params: {
+      key: API,
+      q: keyword,
+      image_type: 'photo',
+      orientation: 'horizontal',
+      safesearch: true,
+      per_page: 40,
+      page,
+    },
+  });
+   if (!response) {
     throw new Error(response.error);
   }
-  return await response.json();
+  return await response.data;
+
+  // ----------/axios----------------
+
+  // ----------fetch----------------
+
+  // const params = new URLSearchParams({
+  //   key: API,
+  //   q: keyword,
+  //   image_type: 'photo',
+  //   orientation: 'horizontal',
+  //   safesearch: true,
+  //   per_page: 40,
+  //   page,
+  // });
+
+  // const response = await fetch(`${BASE_URL}?${params}`);
+  // if (!response.ok) {
+  //   throw new Error(response.error);
+  // }
+  // return await response.json();
+
+  // ----------/fetch----------------
 
   // const data = await response.json();
   // console.log(data)
@@ -78,7 +103,7 @@ async function getEvents(page, keyword) {
     // Notiflix.Notify.failure(
     //   `${error.message}`
     // );
-    console.log(error.message);
+    console.log(error);
   }
 }
 
