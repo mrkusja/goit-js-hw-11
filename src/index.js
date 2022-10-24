@@ -40,23 +40,27 @@ function fetchEvent(page, keyword) {
 
 function getEvents(page, keyword) {
   fetchEvent(page, keyword).then(data => {
+    if (page === 1 && data.totalHits !== 0) {
+      Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+    }
+
     if (data.total === 0) {
       refs.loadMoreBtn.classList.add('invisible');
-      alert(`There are no events by keyword ${keyword}`);
+      Notiflix.Notify.failure(`Sorry, there are no images matching your search ${keyword}. Please try again.`);
     }
 
     const events = data.hits;
     renderEvents(events);
 
-    if (pageToFetch === Math.ceil(data.total / 40)) {
+    if (pageToFetch === Math.ceil(data.totalHits / 40)) {
       refs.loadMoreBtn.classList.add('invisible');
-      alert('Finish');
+      Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
       return;
     }
 
     pageToFetch += 1;
 
-    if (Math.ceil(data.total / 40) > 1) {
+    if (Math.ceil(data.totalHits / 40) > 1) {
       refs.loadMoreBtn.classList.remove('invisible');
     }
   });
