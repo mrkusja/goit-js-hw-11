@@ -18,7 +18,6 @@ let keyword = '';
 let pageToFetch = 1;
 
 async function fetchEvent(page, keyword) {
-
   // ----------axios----------------
 
   const response = await axios.get(`${BASE_URL}`, {
@@ -32,7 +31,8 @@ async function fetchEvent(page, keyword) {
       page,
     },
   });
-   if (!response) {
+  // console.log(response.data)
+  if (!response) {
     throw new Error(response.error);
   }
   return await response.data;
@@ -67,6 +67,8 @@ async function fetchEvent(page, keyword) {
   // return data;
 }
 
+// ----------async-await----------------
+
 async function getEvents(page, keyword) {
   try {
     const data = await fetchEvent(page, keyword);
@@ -84,6 +86,18 @@ async function getEvents(page, keyword) {
 
     const events = data.hits;
     renderEvents(events);
+
+    if (pageToFetch >= 2) {
+      const { height: cardHeight } = document
+        .querySelector('.gallery')
+        .firstElementChild.getBoundingClientRect();
+
+      window.scrollBy({
+        top: cardHeight * 2,
+        behavior: 'smooth',
+      });
+    }
+
     new SimpleLightbox('.gallery a').refresh();
 
     if (pageToFetch === Math.ceil(data.totalHits / 40)) {
@@ -100,12 +114,11 @@ async function getEvents(page, keyword) {
       refs.loadMoreBtn.classList.remove('invisible');
     }
   } catch (error) {
-    // Notiflix.Notify.failure(
-    //   `${error.message}`
-    // );
+    Notiflix.Notify.failure(`${error.message}`);
     console.log(error);
   }
 }
+// ----------/async-await----------------
 
 // fetchEvent(page, keyword).then(data => {
 //   if (page === 1 && data.totalHits !== 0) {
@@ -185,10 +198,11 @@ refs.form.addEventListener('submit', onFormSubmitHandler);
 
 function onFormSubmitHandler(e) {
   e.preventDefault();
-  const query = e.target.elements.searchQuery.value;
+  const query = e.target.elements.searchQuery.value.trim();
   keyword = query;
   pageToFetch = 1;
   refs.gallery.innerHTML = '';
+  // console.log(query)
   if (!query) {
     return;
   }
